@@ -83,3 +83,36 @@ test("investigation tasks save choices without answer gates", async () => {
   assert.doesNotMatch(scoring, /initialChoice === "remove"/);
   assert.doesNotMatch(scoring, /finalChoice === "keep"/);
 });
+
+test("selection labels stay distinct from saved-file confirmation", async () => {
+  const [app, decision, classification, files, copy] = await Promise.all([
+    readFile(
+      new URL("../src/components/ArchiveGame.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/components/DecisionPanel.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/components/DndClassification.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../src/components/FileInvestigations.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../src/data/gameCopy.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(app, /showRewardProgress/);
+  assert.match(app, /"initial-decision"/);
+  assert.match(decision, /currentChoice/);
+  assert.doesNotMatch(decision, />\s*VIEW SAVED\s*</);
+  assert.match(classification, /ALL FILED/);
+  assert.doesNotMatch(classification, />\s*VIEW SAVED\s*</);
+  assert.match(files, /gameCopy\.files\.complete/);
+  assert.doesNotMatch(files, />\s*VIEW SAVED\s*</);
+  assert.match(copy, /TEAM REWARD PROGRESS/);
+  assert.match(copy, /CLUE FILED\. YOU CAN MOVE IT BEFORE SAVING THE FILE/);
+});

@@ -63,7 +63,7 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
   width: min(1280px, calc(100% - 64px));
   min-height: 100vh;
   margin: 0 auto;
-  padding: 126px 0 72px;
+  padding: 142px 0 72px;
 }
 
 .eyebrow, .section-header > span, .task-heading > span, .result-header,
@@ -73,7 +73,7 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
   letter-spacing: 0.11em;
   text-transform: uppercase;
 }
-.eyebrow { display: block; margin-bottom: 10px; color: var(--ash); font-size: 0.72rem; }
+.eyebrow { display: block; margin-bottom: 10px; color: var(--ash); font-size: 0.76rem; }
 h1, h2, h3, p { margin-top: 0; }
 h1, h2, h3 { font-family: var(--serif); }
 
@@ -130,7 +130,7 @@ h1, h2, h3 { font-family: var(--serif); }
 .text-button:hover { color: white; }
 
 .reward-status {
-  position: fixed;
+  position: absolute;
   z-index: 30;
   top: 22px;
   right: max(24px, calc((100vw - 1370px) / 2));
@@ -151,20 +151,20 @@ h1, h2, h3 { font-family: var(--serif); }
   color: var(--red-bright);
   font-size: 1.3rem;
 }
-.reward-status span { color: var(--red-bright); font-size: 0.66rem; }
-.reward-status b { font-size: 0.71rem; }
+.reward-status span { color: var(--red-bright); font-size: 0.7rem; }
+.reward-status b { font-size: 0.78rem; }
 .reward-status small {
   margin-top: 4px;
   color: var(--ash);
   font-family: var(--body-serif);
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   letter-spacing: normal;
   text-transform: none;
 }
 .reward-status.unlocked { border-color: var(--red-bright); background: rgba(70, 12, 10, 0.94); }
 
 .case-marks {
-  position: fixed;
+  position: absolute;
   z-index: 25;
   top: 20px;
   left: max(24px, calc((100vw - 1370px) / 2));
@@ -173,15 +173,16 @@ h1, h2, h3 { font-family: var(--serif); }
 }
 .case-marks span {
   padding: 9px 13px 7px;
-  border: 1px solid rgba(231,225,209,.17);
-  background: rgba(12,13,11,.72);
+  border: 0;
+  border-bottom: 1px solid rgba(231,225,209,.24);
+  background: transparent;
   color: var(--ash);
-  font-size: .62rem;
+  font-size: .68rem;
+  cursor: default;
 }
 .case-marks span.active {
-  border-top: 2px solid var(--red-bright);
-  background: var(--paper);
-  color: var(--ink);
+  border-bottom: 2px solid var(--red-bright);
+  color: var(--paper-bright);
 }
 
 .section-header {
@@ -297,8 +298,11 @@ h1, h2, h3 { font-family: var(--serif); }
   bottom: 26px;
   display: flex;
   gap: 16px;
+  padding: 10px 13px 9px;
+  border: 1px solid rgba(17,17,15,.28);
+  background: rgba(231,225,209,.42);
   font-family: var(--mono);
-  font-size: .72rem;
+  font-size: .78rem;
   letter-spacing: .12em;
 }
 .open-label i { color: var(--red); font-style: normal; }
@@ -308,7 +312,7 @@ h1, h2, h3 { font-family: var(--serif); }
   justify-content: space-between;
   margin-top: 28px;
   color: var(--ash);
-  font-size: .62rem;
+  font-size: .68rem;
 }
 
 .loading-archive {

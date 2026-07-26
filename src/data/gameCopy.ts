@@ -1,10 +1,10 @@
 export const gameCopy = {
   navigation: ["Brief", "Choice", "Files", "Review", "Reward"],
   rewardStatus: {
-    locked: "LOCKED REWARD",
+    locked: "TEAM REWARD PROGRESS",
     unlocked: "FINAL KEY FOUND",
     progress: "3 / 4 CLUES FOUND",
-    lockedNote: "Finish the case to find the last key.",
+    lockedNote: "Shared team progress. Finish the case to find the last key.",
     unlockedNote: "ARCHIVE CABINET OPEN",
   },
   opening: {
@@ -77,7 +77,7 @@ export const gameCopy = {
     button: "SAVE FINAL VIEW",
   },
   puzzle: {
-    choiceSaved: "VIEW SAVED",
+    currentChoice: "CURRENT CHOICE",
     choose: "CHOOSE VIEW",
     confidenceTitle: "How sure are you?",
     notSure: "NOT SURE",
@@ -94,7 +94,7 @@ export const gameCopy = {
     evidenceStamp: "EVIDENCE",
     testimony: "VIEW NOTES",
     incomplete: "Finish each step to save this file.",
-    complete: "YOUR VIEW IS SAVED",
+    complete: "READY TO SAVE THIS FILE",
     button: "SAVE FILE",
     veteran: {
       code: "TASK 01 / COMMENT FILES",
@@ -113,7 +113,7 @@ export const gameCopy = {
       code: "TASK 03 / READ THE VIEW",
       title: "What do you think she means?",
       reason: "What made you choose this?",
-      saved: "VIEW SAVED",
+      saved: "VIEW SELECTED",
       strong: "You chose a strong reading of this message.",
       partial: "This view focuses on one part of the story.",
       open: "You can keep this view. More files are waiting.",
@@ -135,7 +135,7 @@ export const gameCopy = {
   },
   classification: {
     start: "Drag a clue, or select it and then select a folder.",
-    saved: "CLUE ADDED. YOUR READING IS SAVED.",
+    saved: "CLUE FILED. YOU CAN MOVE IT BEFORE SAVING THE FILE.",
     returned: "CLUE RETURNED. YOU CAN PLACE IT AGAIN.",
     tray: "UNFILED CLUES",
     empty: "All clues filed",

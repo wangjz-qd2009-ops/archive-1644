@@ -173,7 +173,7 @@
   font-weight: 600;
   line-height: 1.05;
 }
-.piece-code, .piece-state { font-size: .61rem; }
+.piece-code, .piece-state { font-size: .66rem; }
 .piece-state { opacity: .63; }
 .puzzle-choice.chosen { z-index: 2; background: #f0eadb; filter: drop-shadow(0 0 0.7rem rgba(136,35,30,.5)); }
 .puzzle-choice.chosen::after { border: 2px solid var(--red); }

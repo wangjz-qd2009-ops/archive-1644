@@ -50,7 +50,11 @@ function CaseMarks({ current }: { current: string }) {
   return (
     <nav className="case-marks" aria-label="Case sections">
       {gameCopy.navigation.map((label) => (
-        <span className={current === label ? "active" : ""} key={label}>
+        <span
+          className={current === label ? "active" : ""}
+          aria-current={current === label ? "step" : undefined}
+          key={label}
+        >
           {label}
         </span>
       ))}
@@ -574,6 +578,11 @@ export function ArchiveGame() {
     if (state.currentStep === "result") return "Review";
     return "Reward";
   }, [state.currentStep]);
+  const showRewardProgress = ![
+    "opening",
+    "introduction",
+    "initial-decision",
+  ].includes(state.currentStep);
 
   if (!hydrated) {
     return (
@@ -663,10 +672,12 @@ export function ArchiveGame() {
   return (
     <div className="archive-app">
       <div className="grain" aria-hidden="true" />
-      <RewardStatus
-        fragments={state.rewardFragments}
-        unlocked={state.rewardUnlocked}
-      />
+      {showRewardProgress && (
+        <RewardStatus
+          fragments={state.rewardFragments}
+          unlocked={state.rewardUnlocked}
+        />
+      )}
       {state.currentStep !== "opening" && (
         <CaseMarks current={section} />
       )}

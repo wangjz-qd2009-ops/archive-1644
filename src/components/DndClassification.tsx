@@ -192,7 +192,7 @@ export function DndClassification({
           ))}
           {items.every((item) => answers[item.id]) && (
             <div className="tray-cleared">
-              <span className="stamp small">VIEW SAVED</span>
+              <span className="stamp small">ALL FILED</span>
               {gameCopy.classification.empty}
             </div>
           )}

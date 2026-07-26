@@ -43,16 +43,17 @@ export function DecisionPanel({
             <strong>{mode === "initial" ? option.initialLabel : option.finalLabel}</strong>
             <span className="piece-state">
               {choice === option.id
-                ? gameCopy.puzzle.choiceSaved
+                ? gameCopy.puzzle.currentChoice
                 : gameCopy.puzzle.choose}
             </span>
             {choice === option.id && (
               <motion.i
                 className="view-saved-stamp"
+                aria-hidden="true"
                 initial={{ opacity: 0, scale: 1.6, rotate: -12 }}
                 animate={{ opacity: 1, scale: 1, rotate: -5 }}
               >
-                VIEW SAVED
+                SELECTED
               </motion.i>
             )}
           </motion.button>

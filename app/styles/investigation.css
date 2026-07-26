@@ -273,7 +273,13 @@
   background: linear-gradient(110deg, rgba(255,255,255,.35), transparent 28%), var(--paper);
   box-shadow: 10px 12px 0 rgba(0,0,0,.28);
 }
-.portrait-card { padding: 10px; border: 1px solid rgba(20,20,17,.32); background: #a9a99f; text-align: center; }
+.portrait-card {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(20,20,17,.32);
+  background: #a9a99f;
+  text-align: center;
+}
 .large-silhouette {
   position: relative;
   height: 165px;

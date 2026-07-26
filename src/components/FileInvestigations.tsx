@@ -101,7 +101,7 @@ function CompletionButton({
           initial={{ opacity: 0, scale: 1.5, rotate: -8 }}
           animate={{ opacity: 1, scale: 1, rotate: -2 }}
         >
-          VIEW SAVED
+          READY
         </motion.i>
       )}
       <button
@@ -298,7 +298,7 @@ function NewPlayerFile(props: Props) {
               <b>{option.id}</b>
               <span>{option.text}</span>
               {props.state.perspectiveAnswer === option.id && (
-                <em>VIEW SAVED</em>
+                <em>CURRENT CHOICE</em>
               )}
             </motion.button>
           ))}
