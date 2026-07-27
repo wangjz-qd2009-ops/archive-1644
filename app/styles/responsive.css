@@ -16,6 +16,7 @@
   .result-identity { grid-template-columns: 190px 1fr; gap: 25px; }
   .ai-avatar { width: 180px; height: 180px; }
   .avatar-face { inset: 44px 39px 39px; }
+  .evidence-basis { grid-template-columns: 1fr; }
   .scan-line { animation: none; }
   .reward-drawer { grid-template-columns: repeat(2, 1fr); }
   .board-next-file { flex-direction: column; }
@@ -38,6 +39,7 @@
   .archive-envelope { min-height: 390px; padding: 75px 24px 55px; }
   .archive-envelope > .stamp { top: 25px; right: 18px; }
   .envelope-copy { width: 94%; padding: 23px; }
+  .opening-process ol { grid-template-columns: 1fr; }
   .opening-foot { flex-direction: column; gap: 7px; text-align: center; }
   .investigation-scene { display: block; padding: 16px; }
   .newspaper-clipping, .character-proof, .forum-extract { width: 100%; margin: 0 0 22px; transform: none; }
@@ -86,6 +88,9 @@
   .result-identity p, .identity-disclaimer, .reward-hero p { margin-inline: auto; }
   .debug-grid { grid-template-columns: 1fr; }
   .result-actions, .severe-actions { flex-direction: column; }
+  .evidence-basis { padding: 19px 16px; }
+  .evidence-basis ul { grid-template-columns: 1fr; }
+  .evidence-basis li:last-child { grid-column: auto; }
   .guide-line, .user-line { max-width: 90%; }
   .final-key { margin: auto; }
   .reward-drawer { grid-template-columns: 1fr; padding: 15px; }

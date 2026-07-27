@@ -62,6 +62,10 @@ test("the playable source includes five files and three result paths", async () 
   assert.match(copy, /SOME WARNING SIGNS/);
   assert.match(copy, /STRONG WARNING SIGNS/);
   assert.match(copy, /No real police officer is viewing your account/);
+  assert.match(copy, /ROOK \/ SUPPORT COMPANION/);
+  assert.match(copy, /EVIDENCE TRAIL \/ WHAT THIS REVIEW USED/);
+  assert.match(copy, /pattern from one made-up case, not a diagnosis/);
+  assert.match(app, /copy\.process\.map/);
 });
 
 test("investigation tasks save choices without answer gates", async () => {

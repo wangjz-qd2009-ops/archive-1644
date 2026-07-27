@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DecisionPanel } from "@/src/components/DecisionPanel";
 import { FileInvestigation } from "@/src/components/FileInvestigations";
 import { PerspectivePuzzle } from "@/src/components/PerspectivePuzzle";
@@ -92,6 +92,14 @@ function Opening({ onOpen }: { onOpen: () => void }) {
           <strong>{copy.group}</strong>
           <p>{copy.teammateNote}</p>
           <p>{copy.privacyNote}</p>
+          <div className="opening-process" aria-label={copy.processLabel}>
+            <small>{copy.processLabel}</small>
+            <ol>
+              {copy.process.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </div>
         </div>
         <b className="open-label">
           {copy.button} <i>→</i>
@@ -276,6 +284,7 @@ function InvestigationBoard({
         <div>
           <span className="eyebrow">{copy.eyebrow}</span>
           <h1>{copy.title}</h1>
+          <p>{copy.goal}</p>
         </div>
         <span className="board-counter">
           {state.completedFiles.length} / 5 {copy.counterSuffix}
@@ -539,14 +548,18 @@ function RewardPage({ onRestart }: { onRestart: () => void }) {
 
 export function ArchiveGame() {
   const { state, patchState, updateState, reset, hydrated } = useGameState();
-  const [paramsApplied, setParamsApplied] = useState(false);
-  const [debugMode, setDebugMode] = useState(false);
+  const paramsApplied = useRef(false);
+  const [debugMode] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("debug") ===
+        "scoring",
+  );
 
   useEffect(() => {
-    if (!hydrated || paramsApplied) return;
+    if (!hydrated || paramsApplied.current) return;
     const params = new URLSearchParams(window.location.search);
     const demo = params.get("demo") as PatternLevel | null;
-    setDebugMode(params.get("debug") === "scoring");
     if (demo && ["mild", "moderate", "severe"].includes(demo)) {
       patchState({
         currentStep: "result",
@@ -559,23 +572,27 @@ export function ArchiveGame() {
         rewardUnlocked: false,
       });
     }
-    setParamsApplied(true);
-  }, [hydrated, paramsApplied, patchState]);
+    paramsApplied.current = true;
+  }, [hydrated, patchState]);
 
   const section = useMemo(() => {
     if (
       state.currentStep === "opening" ||
       state.currentStep === "introduction"
     )
-      return "Brief";
-    if (state.currentStep.includes("decision")) return "Choice";
+      return "Case Brief";
+    if (state.currentStep === "initial-decision") return "First View";
     if (
       state.currentStep === "board" ||
       state.currentStep.startsWith("file-") ||
       state.currentStep === "puzzle-complete"
     )
-      return "Files";
-    if (state.currentStep === "result") return "Review";
+      return "Evidence Files";
+    if (
+      state.currentStep === "final-decision" ||
+      state.currentStep === "result"
+    )
+      return "Final Review";
     return "Reward";
   }, [state.currentStep]);
   const showRewardProgress = ![

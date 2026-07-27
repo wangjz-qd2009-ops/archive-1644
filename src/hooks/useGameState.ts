@@ -72,26 +72,37 @@ export function useGameState() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("reset") === "true") {
-      window.localStorage.removeItem(STORAGE_KEY);
-      params.delete("reset");
-      const query = params.toString();
-      window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
-      setState(initialGameState);
-      setHydrated(true);
-      return;
-    }
-
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setState(restoreState(saved));
-      } catch {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reset") === "true") {
         window.localStorage.removeItem(STORAGE_KEY);
+        params.delete("reset");
+        const query = params.toString();
+        window.history.replaceState(
+          {},
+          "",
+          `${window.location.pathname}${query ? `?${query}` : ""}`,
+        );
+        setState(initialGameState);
+        setHydrated(true);
+        return;
       }
-    }
-    setHydrated(true);
+
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          setState(restoreState(saved));
+        } catch {
+          window.localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+      setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

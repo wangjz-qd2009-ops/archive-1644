@@ -553,16 +553,17 @@ function ModeratorFile(props: Props) {
 }
 
 export function FileInvestigation(props: Props) {
-  const startedAt = useRef(Date.now());
+  const startedAt = useRef<number | null>(null);
 
   useEffect(() => {
     startedAt.current = Date.now();
   }, [props.fileId]);
 
   const finishFile = (fileId: FileId) => {
+    const start = startedAt.current ?? Date.now();
     const seconds = Math.max(
       1,
-      Math.round((Date.now() - startedAt.current) / 1000),
+      Math.round((Date.now() - start) / 1000),
     );
     props.updateState((current) => ({
       ...current,

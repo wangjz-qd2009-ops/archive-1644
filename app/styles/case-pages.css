@@ -143,6 +143,48 @@
 .intro-action { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-top: 28px; }
 .intro-action p { max-width: 650px; margin: 0; color: var(--paper-dark); }
 
+.opening-process {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(17, 17, 15, .2);
+}
+.opening-process > small {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+.opening-process ol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: case-step;
+}
+.opening-process li {
+  counter-increment: case-step;
+  padding: 8px 9px;
+  border: 1px solid rgba(17, 17, 15, .17);
+  background: rgba(255, 255, 255, .2);
+  color: var(--ink);
+  font-size: .78rem;
+  line-height: 1.25;
+}
+.opening-process li::before {
+  content: "0" counter(case-step);
+  display: block;
+  margin-bottom: 3px;
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: .57rem;
+  font-weight: 800;
+}
+
 .decision-puzzle {
   display: grid;
   max-width: 1120px;

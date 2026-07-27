@@ -1,5 +1,11 @@
 export const gameCopy = {
-  navigation: ["Brief", "Choice", "Files", "Review", "Reward"],
+  navigation: [
+    "Case Brief",
+    "First View",
+    "Evidence Files",
+    "Final Review",
+    "Reward",
+  ],
   rewardStatus: {
     locked: "TEAM REWARD PROGRESS",
     unlocked: "FINAL KEY FOUND",
@@ -17,6 +23,12 @@ export const gameCopy = {
     group: "The Iron Banner Guild",
     teammateNote: "Four teammates are checking this case.",
     privacyNote: "Team progress is shared. Your choices stay private.",
+    processLabel: "HOW THIS CASE WORKS",
+    process: [
+      "Make a first view",
+      "Check five evidence files",
+      "Review your view privately",
+    ],
     button: "OPEN CASE",
     access: "ARCHIVE ACCESS / 017-1644-LY",
     motto: "ONE FILE NEVER SHOWS THE WHOLE STORY",
@@ -51,6 +63,8 @@ export const gameCopy = {
   board: {
     eyebrow: "EVIDENCE BOARD / CASE ACTIVE",
     title: "Find the missing views",
+    goal:
+      "Goal: save all five files. Each saved file adds one view to the case puzzle.",
     counterSuffix: "FILES SAVED",
     firstHint: "The first file is ready. Open the lit piece.",
     nextHint: "A new file is ready. Open the next lit piece.",
@@ -148,9 +162,23 @@ export const gameCopy = {
     header: "CASE 017 / PRIVATE REVIEW",
     private: "YOUR RESULT STAYS PRIVATE",
     disclaimer:
-      "This game looks at how you explored a made-up case. It is not a medical test or a legal decision.",
+      "This is a pattern from one made-up case, not a diagnosis, identity label, or legal judgment. It cannot show how common this pattern is.",
+    basis: {
+      eyebrow: "EVIDENCE TRAIL / WHAT THIS REVIEW USED",
+      title: "Your result comes from actions in this case",
+      note:
+        "The review uses only what you did here. These signals support a cautious interpretation; they do not prove how you behave everywhere.",
+      signals: [
+        "Which files you opened, saved, or checked again",
+        "How you separated known, possible, and made-up clues",
+        "How you interpreted another player's words",
+        "Whether group popularity shaped your reasons",
+        "How you classified personal attacks and safety risks",
+      ],
+    },
+    reviewButton: "REVIEW MY FINAL CHOICE",
     mild: {
-      role: "ARCHIVE GUIDE",
+      role: "ROOK / CASE COMPANION",
       title: "MILD PATTERN",
       feedback:
         "You checked several views before making your choice. Group opinions may still shape quick decisions.",
@@ -162,9 +190,10 @@ export const gameCopy = {
       buttons: ["LEARN MORE", "CHECK MY CHOICES", "FINISH CASE"],
     },
     moderate: {
-      role: "AI SUPPORT GUIDE",
+      role: "ROOK / SUPPORT COMPANION",
       title: "SOME WARNING SIGNS",
-      identity: "This is an AI guide, not a real therapist.",
+      identity:
+        "Rook uses AI support logic to guide reflection. It is not a therapist and does not provide medical advice.",
       feedback:
         "You often stayed with clues that matched your first view. You were less open when other views appeared.",
       facts: [
@@ -175,10 +204,10 @@ export const gameCopy = {
       buttons: ["KEEP TALKING", "END FOR NOW"],
     },
     severe: {
-      role: "AI CYBER-SAFETY GUIDE",
+      role: "ROOK / SAFETY COMPANION",
       title: "STRONG WARNING SIGNS",
       identity:
-        "This is an AI safety guide. No real police officer is viewing your account.",
+        "Rook uses AI safety logic to suggest safer next steps. No real police officer is viewing your account.",
       feedback:
         "You often rejected other views and trusted the group first. Some choices treated personal attacks as normal.",
       facts: [

@@ -62,15 +62,19 @@ function DebugLedger({
   );
 }
 
-function AiAvatar({ level }: { level: PatternLevel }) {
+function CompanionAvatar({ level }: { level: PatternLevel }) {
   const label =
     level === "mild"
-      ? "Soft round AI archive guide"
+      ? "Rook, a calm archive case companion"
       : level === "moderate"
-        ? "AI support guide with a simple metal face"
-        : "AI cyber-safety guide with a dark red scanner";
+        ? "Rook, a reflective support companion"
+        : "Rook, a cyber-safety companion with a red alert halo";
   return (
-    <div className={`ai-avatar ${level}`} role="img" aria-label={label}>
+    <div
+      className={`ai-avatar companion-avatar ${level}`}
+      role="img"
+      aria-label={label}
+    >
       <div className="avatar-halo" />
       <div className="avatar-face">
         <i className="eye left" />
@@ -78,8 +82,29 @@ function AiAvatar({ level }: { level: PatternLevel }) {
         <i className="voice-line" />
       </div>
       <span className="scan-line" />
-      <span className="avatar-id">AI / 017</span>
+      <span className="avatar-id">ROOK / CASE 017</span>
     </div>
+  );
+}
+
+function EvidenceBasis() {
+  const copy = gameCopy.results.basis;
+  return (
+    <section className="evidence-basis" aria-labelledby="evidence-basis-title">
+      <header>
+        <span className="eyebrow">{copy.eyebrow}</span>
+        <h2 id="evidence-basis-title">{copy.title}</h2>
+        <p>{copy.note}</p>
+      </header>
+      <ul>
+        {copy.signals.map((signal, index) => (
+          <li key={signal}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            {signal}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -89,13 +114,14 @@ function MildResult(props: Props) {
   return (
     <>
       <div className="result-identity">
-        <AiAvatar level="mild" />
+        <CompanionAvatar level="mild" />
         <div>
           <span className="eyebrow">{copy.role}</span>
           <h1>{copy.title}</h1>
           <p>{copy.feedback}</p>
         </div>
       </div>
+      <EvidenceBasis />
       <AnimatePresence>
         {learn && (
           <motion.section
@@ -169,7 +195,7 @@ function ModerateResult(props: Props) {
   return (
     <>
       <div className="result-identity">
-        <AiAvatar level="moderate" />
+        <CompanionAvatar level="moderate" />
         <div>
           <span className="eyebrow">{copy.role}</span>
           <h1>{copy.title}</h1>
@@ -177,6 +203,7 @@ function ModerateResult(props: Props) {
           <strong className="identity-disclaimer">{copy.identity}</strong>
         </div>
       </div>
+      <EvidenceBasis />
       <section className="guidance-sheet">
         <ul>
           {copy.facts.map((fact) => (
@@ -261,6 +288,13 @@ function ModerateResult(props: Props) {
         <button
           type="button"
           className="secondary-button"
+          onClick={props.onReview}
+        >
+          {gameCopy.results.reviewButton}
+        </button>
+        <button
+          type="button"
+          className="secondary-button"
           onClick={props.onComplete}
         >
           {copy.buttons[1]}
@@ -297,7 +331,7 @@ function SevereResult(props: Props) {
   return (
     <>
       <div className="result-identity">
-        <AiAvatar level="severe" />
+        <CompanionAvatar level="severe" />
         <div>
           <span className="eyebrow">{copy.role}</span>
           <h1>{copy.title}</h1>
@@ -305,6 +339,7 @@ function SevereResult(props: Props) {
           <strong className="identity-disclaimer">{copy.identity}</strong>
         </div>
       </div>
+      <EvidenceBasis />
       <section className="guidance-sheet severe-guidance">
         <ul>
           {copy.facts.map((fact) => (
@@ -339,6 +374,13 @@ function SevereResult(props: Props) {
           onClick={() => setPanel("rules")}
         >
           {copy.buttons[0]}
+        </button>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={props.onReview}
+        >
+          {gameCopy.results.reviewButton}
         </button>
         <button
           type="button"
