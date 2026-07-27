@@ -25,6 +25,39 @@ export type DecisionChoice =
 export type PatternLevel = "mild" | "moderate" | "severe";
 export type ResultLevel = PatternLevel;
 
+export type ResultStage =
+  | "reconstruction"
+  | "evidence"
+  | "turning-point"
+  | "rule"
+  | "practice"
+  | "transfer"
+  | "closed";
+
+export type InvestigationRuleId =
+  | "check-source"
+  | "critique-claim"
+  | "leave-uncertainty"
+  | "missing-perspective";
+
+export type PracticeActionId =
+  | "open-source"
+  | "read-discussion"
+  | "rewrite-reply"
+  | "not-enough-evidence"
+  | "respond-immediately"
+  | "leave-discussion";
+
+export type TransferActionId =
+  | "open-interview"
+  | "read-interpretation"
+  | "rewrite-response"
+  | "not-sure-yet"
+  | "reply-immediately"
+  | "remove-post"
+  | "keep-post"
+  | "modify-post";
+
 export type ConfidenceChoice =
   | "not-sure"
   | "a-little-sure"
@@ -92,6 +125,16 @@ export interface GameState {
   interactionDimensions: InteractionDimensions;
   scoringReasons: ScoringReason[];
   patternLevel: PatternLevel | null;
+  resultStage: ResultStage;
+  expandedEvidenceCards: string[];
+  turningPointFile: FileId | null;
+  turningPointReason: string | null;
+  adoptedRule: InvestigationRuleId | null;
+  practiceAction: PracticeActionId | null;
+  practiceSkipped: boolean;
+  transferAction: TransferActionId | null;
+  savedCaseCard: boolean;
+  resultEvents: string[];
   rewardFragments: number;
   rewardUnlocked: boolean;
   teammateProgress: TeammateProgress[];

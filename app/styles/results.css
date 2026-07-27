@@ -274,6 +274,217 @@
   text-align: center;
 }
 
+.reflection-page {
+  max-width: 1120px;
+}
+
+.reflection-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 30px;
+  font-family: var(--mono);
+  font-size: .62rem;
+  letter-spacing: .08em;
+}
+
+.reflection-steps span {
+  padding: 7px 10px;
+  border: 1px solid rgba(231,225,209,.18);
+  color: var(--ash);
+}
+
+.reflection-steps span.active {
+  border-color: rgba(231,225,209,.5);
+  color: var(--paper);
+  background: rgba(231,225,209,.08);
+}
+
+.reflection-stage {
+  display: grid;
+  gap: 18px;
+}
+
+.reflection-stage h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: .92;
+}
+
+.reflection-stage h2,
+.reflection-stage p {
+  margin: 0;
+}
+
+.judgement-path {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 70px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.judgement-path article,
+.trace-panel,
+.reflection-evidence-card,
+.rule-card,
+.rule-reminder,
+.final-reflection-card,
+.closing-timeline article {
+  padding: 18px;
+  border: 1px solid rgba(231,225,209,.22);
+  background: rgba(23,24,21,.76);
+}
+
+.judgement-path article span,
+.archive-chip small,
+.reflection-evidence-card button b,
+.rule-card span,
+.closing-timeline span {
+  display: block;
+  color: var(--ash);
+  font-family: var(--mono);
+  font-size: .58rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.judgement-path article b {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.6rem;
+}
+
+.judgement-path > i {
+  height: 1px;
+  background: rgba(231,225,209,.45);
+}
+
+.archive-chip-grid,
+.evidence-card-grid,
+.archive-select-grid,
+.rule-card-grid,
+.action-grid,
+.closing-timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.archive-chip-grid,
+.archive-select-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.evidence-card-grid,
+.rule-card-grid,
+.action-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.archive-chip,
+.archive-select-grid button,
+.action-grid button {
+  padding: 14px;
+  border: 1px solid rgba(231,225,209,.22);
+  background: rgba(255,255,255,.035);
+  color: var(--paper);
+  text-align: left;
+}
+
+.archive-select-grid button small,
+.archive-select-grid button b {
+  display: block;
+}
+
+.archive-select-grid button,
+.action-grid button,
+.rule-card,
+.reflection-evidence-card button {
+  cursor: pointer;
+}
+
+.archive-select-grid button.selected,
+.action-grid button.selected,
+.rule-card.selected {
+  border-color: var(--red-bright);
+  background: rgba(125,29,26,.3);
+}
+
+.reflection-evidence-card button,
+.rule-card {
+  width: 100%;
+  color: var(--paper);
+  text-align: left;
+}
+
+.reflection-evidence-card button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.reflection-evidence-card ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--ash);
+}
+
+.turning-reasons {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(231,225,209,.22);
+}
+
+.turning-reasons legend {
+  padding: 0 8px;
+  font-family: var(--mono);
+  font-size: .68rem;
+  letter-spacing: .08em;
+}
+
+.turning-reasons label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.35;
+}
+
+.comment-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-stack p {
+  padding: 13px 15px;
+  border-left: 3px solid rgba(231,225,209,.28);
+  background: rgba(255,255,255,.04);
+}
+
+.reflection-note {
+  padding: 14px 16px;
+  border-left: 3px solid var(--red);
+  background: rgba(125,29,26,.18);
+}
+
+.action-requirement {
+  align-self: center;
+  margin-right: auto;
+  color: var(--ash);
+  font-family: var(--mono);
+  font-size: .62rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.case-closed .reward-stamp {
+  position: static;
+  justify-self: start;
+}
+
 .reward-page { max-width: 1120px; }
 .reward-hero { display: grid; grid-template-columns: 190px 1fr; align-items: center; gap: 44px; margin-bottom: 44px; }
 .reward-hero h1 { margin: 6px 0 12px; font-size: clamp(3.2rem, 7vw, 6.2rem); font-weight: 400; line-height: .82; }

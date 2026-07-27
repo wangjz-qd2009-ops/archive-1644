@@ -1,431 +1,814 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState } from "react";
-import { gameCopy } from "@/src/data/gameCopy";
+import { useEffect, useState } from "react";
+import { perspectives } from "@/src/data/caseData";
+import {
+  archiveLabel,
+  decisionLabels,
+  generateCaseReflection,
+  practiceActions,
+  reflectionDisclaimer,
+  ruleOptions,
+  transferActions,
+} from "@/src/utils/caseReflection";
 import type {
-  InteractionDimensions,
-  PatternLevel,
-  ScoringReason,
+  FileId,
+  GameState,
+  InvestigationRuleId,
+  PracticeActionId,
+  TransferActionId,
 } from "@/src/types/game";
 
 interface Props {
-  level: PatternLevel;
-  dimensions: InteractionDimensions;
-  scoringReasons: ScoringReason[];
-  debug: boolean;
+  state: GameState;
+  patchState: (patch: Partial<GameState>) => void;
   onComplete: () => void;
   onReview: () => void;
 }
 
-const dimensionLabels: Record<keyof InteractionDimensions, string> = {
-  exploration: "Exploring Information",
-  evidenceChecking: "Checking Evidence",
-  understandingOthers: "Understanding Others",
-  groupDependence: "Group Dependence",
-  hostilityTolerance: "Hostility Tolerance",
-};
-
-function DebugLedger({
-  dimensions,
-  reasons,
-  level,
-}: {
-  dimensions: InteractionDimensions;
-  reasons: ScoringReason[];
-  level: PatternLevel;
-}) {
-  return (
-    <section className="debug-ledger" aria-label="Scoring debug panel">
-      <header>
-        <span>DEBUG / SCORING</span>
-        <b>FINAL LEVEL: {level.toUpperCase()}</b>
-      </header>
-      <div className="debug-grid">
-        {Object.entries(dimensions).map(([key, score]) => (
-          <div key={key}>
-            <span>
-              {dimensionLabels[key as keyof InteractionDimensions]}
-            </span>
-            <output>{score} / 20</output>
-          </div>
-        ))}
-      </div>
-      <ul>
-        {reasons.map((reason, index) => (
-          <li key={`${reason.dimension}-${index}`}>
-            <b>{dimensionLabels[reason.dimension]}:</b> {reason.text}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function CompanionAvatar({ level }: { level: PatternLevel }) {
-  const label =
-    level === "mild"
-      ? "Rook, a calm archive case companion"
-      : level === "moderate"
-        ? "Rook, a reflective support companion"
-        : "Rook, a cyber-safety companion with a red alert halo";
-  return (
-    <div
-      className={`ai-avatar companion-avatar ${level}`}
-      role="img"
-      aria-label={label}
-    >
-      <div className="avatar-halo" />
-      <div className="avatar-face">
-        <i className="eye left" />
-        <i className="eye right" />
-        <i className="voice-line" />
-      </div>
-      <span className="scan-line" />
-      <span className="avatar-id">ROOK / CASE 017</span>
-    </div>
-  );
-}
-
-function EvidenceBasis() {
-  const copy = gameCopy.results.basis;
-  return (
-    <section className="evidence-basis" aria-labelledby="evidence-basis-title">
-      <header>
-        <span className="eyebrow">{copy.eyebrow}</span>
-        <h2 id="evidence-basis-title">{copy.title}</h2>
-        <p>{copy.note}</p>
-      </header>
-      <ul>
-        {copy.signals.map((signal, index) => (
-          <li key={signal}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            {signal}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function MildResult(props: Props) {
-  const [learn, setLearn] = useState(false);
-  const copy = gameCopy.results.mild;
-  return (
-    <>
-      <div className="result-identity">
-        <CompanionAvatar level="mild" />
-        <div>
-          <span className="eyebrow">{copy.role}</span>
-          <h1>{copy.title}</h1>
-          <p>{copy.feedback}</p>
-        </div>
-      </div>
-      <EvidenceBasis />
-      <AnimatePresence>
-        {learn && (
-          <motion.section
-            className="guidance-sheet"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-          >
-            <h2>One source, many echoes</h2>
-            <ul>
-              {copy.facts.map((fact) => (
-                <li key={fact}>{fact}</li>
-              ))}
-            </ul>
-          </motion.section>
-        )}
-      </AnimatePresence>
-      <div className="result-actions">
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={() => setLearn((value) => !value)}
-        >
-          {copy.buttons[0]}
-        </button>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={props.onReview}
-        >
-          {copy.buttons[1]}
-        </button>
-        <button
-          type="button"
-          className="primary-button"
-          onClick={props.onComplete}
-        >
-          {copy.buttons[2]}
-        </button>
-      </div>
-    </>
-  );
-}
-
-const guidePrompts = [
-  {
-    question: "Which part made you feel annoyed?",
-    replies: ["The history claim", "The group posts", "The hard trade-off"],
-  },
-  {
-    question: "Do online arguments often feel personal?",
-    replies: ["Often", "Sometimes", "Not often"],
-  },
-  {
-    question: "What could help you pause next time?",
-    replies: ["Check the source", "Wait before replying", "Read another view"],
-  },
+const stageOrder: Array<{ id: GameState["resultStage"]; label: string }> = [
+  { id: "reconstruction", label: "Reconstruct" },
+  { id: "evidence", label: "Evidence" },
+  { id: "turning-point", label: "Turn" },
+  { id: "rule", label: "Rule" },
+  { id: "practice", label: "Practice" },
+  { id: "transfer", label: "Transfer" },
+  { id: "closed", label: "Close" },
 ];
 
-function ModerateResult(props: Props) {
-  const [chatOpen, setChatOpen] = useState(false);
-  const [round, setRound] = useState(0);
-  const [responses, setResponses] = useState<string[]>([]);
-  const activePrompt = guidePrompts[Math.min(round, guidePrompts.length - 1)];
-  const copy = gameCopy.results.moderate;
+const turningReasons = [
+  { id: "facts", label: "The facts of the case" },
+  { id: "post-intention", label: "The intention behind the post" },
+  { id: "player-effect", label: "The effect on other players" },
+  {
+    id: "criticism-attack",
+    label: "The difference between criticism and personal attack",
+  },
+  { id: "limits", label: "The limits of the available evidence" },
+  {
+    id: "strengthened-original",
+    label: "It strengthened my original judgement",
+  },
+  { id: "not-sure", label: "I am not sure" },
+];
 
-  const reply = (text: string) => {
-    setResponses((current) => [...current, text]);
-    setRound((current) => current + 1);
-  };
+const practiceScenario =
+  "A leaked screenshot claims that the next update removes a historical feature to satisfy new players. The full update note has not been released.";
 
-  return (
-    <>
-      <div className="result-identity">
-        <CompanionAvatar level="moderate" />
-        <div>
-          <span className="eyebrow">{copy.role}</span>
-          <h1>{copy.title}</h1>
-          <p>{copy.feedback}</p>
-          <strong className="identity-disclaimer">{copy.identity}</strong>
-        </div>
-      </div>
-      <EvidenceBasis />
-      <section className="guidance-sheet">
-        <ul>
-          {copy.facts.map((fact) => (
-            <li key={fact}>{fact}</li>
-          ))}
-        </ul>
-      </section>
+const transferScenario =
+  "A popular post accuses a character designer of deliberately insulting the game's historical setting. The post includes a cropped image but no link to the original interview.";
 
-      <AnimatePresence>
-        {chatOpen && (
-          <motion.section
-            className="guide-chat"
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <header>
-              <div className="mini-avatar" aria-hidden="true" />
-              <div>
-                <b>{copy.role}</b>
-                <small>PRIVATE / OPTIONAL</small>
-              </div>
-              <button
-                type="button"
-                onClick={() => setChatOpen(false)}
-                aria-label="Exit chat"
-              >
-                ×
-              </button>
-            </header>
-            <div className="chat-log" aria-live="polite">
-              {responses.map((response, index) => (
-                <div key={`${response}-${index}`}>
-                  <p className="guide-line">
-                    {guidePrompts[index].question}
-                  </p>
-                  <p className="user-line">{response}</p>
-                </div>
-              ))}
-              {round < guidePrompts.length ? (
-                <>
-                  <p className="guide-line">{activePrompt.question}</p>
-                  <div className="quick-replies">
-                    {activePrompt.replies.map((option) => (
-                      <button
-                        type="button"
-                        key={option}
-                        onClick={() => reply(option)}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                    <button type="button" onClick={() => reply("Skipped")}>
-                      SKIP
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <p className="guide-line">
-                  Your note is saved. You can leave now.
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => setChatOpen(false)}
-            >
-              EXIT CHAT
-            </button>
-          </motion.section>
-        )}
-      </AnimatePresence>
-
-      <div className="result-actions">
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() => setChatOpen(true)}
-        >
-          {copy.buttons[0]}
-        </button>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={props.onReview}
-        >
-          {gameCopy.results.reviewButton}
-        </button>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={props.onComplete}
-        >
-          {copy.buttons[1]}
-        </button>
-      </div>
-    </>
-  );
+function appendEvent(state: GameState, event: string) {
+  return Array.from(new Set([...state.resultEvents, event]));
 }
 
-function SevereResult(props: Props) {
-  const [panel, setPanel] = useState<"rules" | "support" | null>(null);
-  const copy = gameCopy.results.severe;
-  const panelContent = useMemo(() => {
-    if (panel === "rules") {
-      return {
-        title: "ONLINE SAFETY NOTES",
-        items: [
-          "Do not share private details or threats.",
-          "Block and report instead of attacking back.",
-          "Save proof without reposting private details.",
-        ],
-      };
-    }
-    return {
-      title: "SUPPORT OPTIONS",
-      items: [
-        "Step away and tell a trusted person.",
-        "Use the platform’s safety tools.",
-        "Ask for help if online fights affect daily life.",
-      ],
-    };
-  }, [panel]);
-
-  return (
-    <>
-      <div className="result-identity">
-        <CompanionAvatar level="severe" />
-        <div>
-          <span className="eyebrow">{copy.role}</span>
-          <h1>{copy.title}</h1>
-          <p>{copy.feedback}</p>
-          <strong className="identity-disclaimer">{copy.identity}</strong>
-        </div>
-      </div>
-      <EvidenceBasis />
-      <section className="guidance-sheet severe-guidance">
-        <ul>
-          {copy.facts.map((fact) => (
-            <li key={fact}>{fact}</li>
-          ))}
-        </ul>
-      </section>
-
-      <AnimatePresence mode="wait">
-        {panel && (
-          <motion.section
-            className="safety-panel"
-            key={panel}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <span className="stamp small">PAUSE & REVIEW</span>
-            <h2>{panelContent.title}</h2>
-            <ul>
-              {panelContent.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </motion.section>
-        )}
-      </AnimatePresence>
-
-      <div className="result-actions severe-actions">
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={() => setPanel("rules")}
-        >
-          {copy.buttons[0]}
-        </button>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={props.onReview}
-        >
-          {gameCopy.results.reviewButton}
-        </button>
-        <button
-          type="button"
-          className="primary-button"
-          onClick={props.onComplete}
-        >
-          {copy.buttons[1]}
-        </button>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={() => setPanel("support")}
-        >
-          {copy.buttons[2]}
-        </button>
-      </div>
-    </>
-  );
+function stageAfter(stage: GameState["resultStage"]) {
+  const index = stageOrder.findIndex((item) => item.id === stage);
+  return stageOrder[Math.min(index + 1, stageOrder.length - 1)].id;
 }
 
-export function ResultPage(props: Props) {
+function ResultShell({
+  state,
+  children,
+}: {
+  state: GameState;
+  children: React.ReactNode;
+}) {
+  const activeIndex = stageOrder.findIndex(
+    (stage) => stage.id === state.resultStage,
+  );
   return (
     <motion.main
-      className={`result-page page-shell result-${props.level}`}
+      className="result-page page-shell reflection-page"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <header className="result-header">
-        <span>{gameCopy.results.header}</span>
-        <b>{gameCopy.results.private}</b>
+        <span>CASE 017 / PRIVATE REFLECTION</span>
+        <b>YOUR RESULT STAYS PRIVATE</b>
       </header>
-      {props.level === "mild" && <MildResult {...props} />}
-      {props.level === "moderate" && <ModerateResult {...props} />}
-      {props.level === "severe" && <SevereResult {...props} />}
-      {props.debug && (
-        <DebugLedger
-          dimensions={props.dimensions}
-          reasons={props.scoringReasons}
-          level={props.level}
+      <nav className="reflection-steps" aria-label="Reflection stages">
+        {stageOrder.map((stage, index) => (
+          <span
+            key={stage.id}
+            className={index <= activeIndex ? "active" : ""}
+            aria-current={stage.id === state.resultStage ? "step" : undefined}
+          >
+            {stage.label}
+          </span>
+        ))}
+      </nav>
+      <AnimatePresence mode="wait">{children}</AnimatePresence>
+    </motion.main>
+  );
+}
+
+function ContinueButton({
+  state,
+  patchState,
+  label = "Continue",
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className="primary-button"
+      onClick={() =>
+        patchState({
+          resultStage: stageAfter(state.resultStage),
+        })
+      }
+    >
+      {label}
+    </button>
+  );
+}
+
+function ArchiveChips({ files }: { files: FileId[] }) {
+  return (
+    <div className="archive-chip-grid">
+      {files.map((file) => {
+        const perspective = perspectives.find((item) => item.id === file);
+        return (
+          <span className="archive-chip" key={file}>
+            <small>{perspective?.code ?? file}</small>
+            <b>{archiveLabel(file)}</b>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function CaseReconstruction({
+  state,
+  patchState,
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+}) {
+  const reflection = generateCaseReflection({
+    initialDecision: state.initialChoice,
+    finalDecision: state.finalChoice,
+    selectedInfluentialClues: state.finalReasons,
+    viewedArchives: state.completedFiles,
+    turningPoint: state.turningPointFile,
+    turningPointReason: state.turningPointReason,
+    adoptedRule: state.adoptedRule,
+    practiceAction: state.practiceAction,
+    practiceSkipped: state.practiceSkipped,
+    transferAction: state.transferAction,
+    classificationPlacements: state.classificationPlacements,
+  });
+
+  return (
+    <motion.section
+      className="reflection-stage case-reconstruction"
+      key="reconstruction"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <span className="eyebrow">CASE RECONSTRUCTION</span>
+      <h1>Case Reconstruction</h1>
+      <p>Let&apos;s retrace how your judgement developed.</p>
+
+      <div className="judgement-path" aria-label="Judgement comparison">
+        <article>
+          <span>FIRST JUDGEMENT</span>
+          <b>{reflection.reconstruction.first}</b>
+        </article>
+        <i aria-hidden="true" />
+        <article>
+          <span>FINAL JUDGEMENT</span>
+          <b>{reflection.reconstruction.final}</b>
+        </article>
+      </div>
+
+      <p className="reflection-note">
+        {reflection.reconstruction.message}
+      </p>
+
+      <section className="trace-panel">
+        <h2>Clues you said influenced your final judgement</h2>
+        <ArchiveChips files={reflection.reconstruction.influencedArchives} />
+        <small>
+          If the final judgement used broad reason labels, this prototype maps
+          them to the closest case files instead of inventing extra data.
+        </small>
+      </section>
+
+      <p className="universal-disclaimer">{reflectionDisclaimer}</p>
+      <div className="result-actions">
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => patchState({ currentStep: "final-decision" })}
+        >
+          Review Final Choice
+        </button>
+        <ContinueButton state={state} patchState={patchState} />
+      </div>
+    </motion.section>
+  );
+}
+
+function EvidenceTrail({
+  state,
+  patchState,
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+}) {
+  const reflection = generateCaseReflection({
+    initialDecision: state.initialChoice,
+    finalDecision: state.finalChoice,
+    selectedInfluentialClues: state.finalReasons,
+    viewedArchives: state.completedFiles,
+    turningPoint: state.turningPointFile,
+    turningPointReason: state.turningPointReason,
+    adoptedRule: state.adoptedRule,
+    practiceAction: state.practiceAction,
+    practiceSkipped: state.practiceSkipped,
+    transferAction: state.transferAction,
+    classificationPlacements: state.classificationPlacements,
+  });
+
+  const toggleCard = (id: string) => {
+    const expandedEvidenceCards = state.expandedEvidenceCards.includes(id)
+      ? state.expandedEvidenceCards.filter((item) => item !== id)
+      : [...state.expandedEvidenceCards, id];
+    patchState({
+      expandedEvidenceCards,
+      resultEvents: appendEvent(state, "evidence_card_expanded"),
+    });
+  };
+
+  return (
+    <motion.section
+      className="reflection-stage"
+      key="evidence"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <span className="eyebrow">EVIDENCE TRAIL</span>
+      <h1>Your Evidence Trail</h1>
+      <p>
+        Each card is tied to a recorded choice in this prototype. It does not
+        infer hidden motives.
+      </p>
+
+      <div className="evidence-card-grid">
+        {reflection.evidenceCards.map((card) => {
+          const expanded = state.expandedEvidenceCards.includes(card.id);
+          return (
+            <article className="reflection-evidence-card" key={card.id}>
+              <button
+                type="button"
+                aria-expanded={expanded}
+                onClick={() => toggleCard(card.id)}
+              >
+                <span>{card.title}</span>
+                <b>{expanded ? "Hide source" : "Show source"}</b>
+              </button>
+              <p>
+                <strong>Evidence:</strong> {card.evidence}
+              </p>
+              <p>{card.explanation}</p>
+              <AnimatePresence>
+                {expanded && (
+                  <motion.ul
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    {card.sources.map((source) => (
+                      <li key={source}>{source}</li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="result-actions">
+        <ContinueButton state={state} patchState={patchState} />
+      </div>
+    </motion.section>
+  );
+}
+
+function TurningPoint({
+  state,
+  patchState,
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+}) {
+  const preferredFiles = generateCaseReflection({
+    initialDecision: state.initialChoice,
+    finalDecision: state.finalChoice,
+    selectedInfluentialClues: state.finalReasons,
+    viewedArchives: state.completedFiles,
+    turningPoint: state.turningPointFile,
+    turningPointReason: state.turningPointReason,
+    adoptedRule: state.adoptedRule,
+    practiceAction: state.practiceAction,
+    practiceSkipped: state.practiceSkipped,
+    transferAction: state.transferAction,
+    classificationPlacements: state.classificationPlacements,
+  }).reconstruction.influencedArchives;
+
+  const files = preferredFiles.length ? preferredFiles : state.completedFiles;
+  const effectiveTurningPointFile =
+    state.turningPointFile ?? (files.length === 1 ? files[0] : null);
+
+  return (
+    <motion.section
+      className="reflection-stage"
+      key="turning-point"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <span className="eyebrow">TURNING POINT</span>
+      <h1>Where Did the Case Turn?</h1>
+      <p>Which clue most changed or strengthened your judgement?</p>
+
+      <div className="archive-select-grid" role="radiogroup">
+        {files.map((file) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={effectiveTurningPointFile === file}
+            className={effectiveTurningPointFile === file ? "selected" : ""}
+            key={file}
+            onClick={() =>
+              patchState({
+                turningPointFile: file,
+                resultEvents: appendEvent(
+                  state,
+                  "turning_point_selected",
+                ),
+              })
+            }
+          >
+            <small>{perspectives.find((item) => item.id === file)?.code}</small>
+            <b>{archiveLabel(file)}</b>
+          </button>
+        ))}
+      </div>
+
+      <fieldset className="turning-reasons">
+        <legend>What did this clue make you reconsider?</legend>
+        {turningReasons.map((reason) => (
+          <label key={reason.id}>
+            <input
+              type="radio"
+              name="turning-point-reason"
+              checked={state.turningPointReason === reason.id}
+              onChange={() =>
+                patchState({
+                  turningPointReason: reason.id,
+                  resultEvents: appendEvent(
+                    state,
+                    "turning_point_selected",
+                  ),
+                })
+              }
+            />
+            <span>{reason.label}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <div className="result-actions">
+        {(!effectiveTurningPointFile || !state.turningPointReason) && (
+          <small className="action-requirement">
+            Select one clue and one reason to continue.
+          </small>
+        )}
+        <button
+          type="button"
+          className="primary-button"
+          disabled={!effectiveTurningPointFile || !state.turningPointReason}
+          onClick={() =>
+            patchState({
+              turningPointFile: effectiveTurningPointFile,
+              resultStage: "rule",
+            })
+          }
+        >
+          Continue
+        </button>
+      </div>
+
+      <p className="reflection-note">
+        This is your interpretation of the turning point, not proof of why your
+        behaviour changed.
+      </p>
+    </motion.section>
+  );
+}
+
+function RuleChoice({
+  state,
+  patchState,
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const reflection = generateCaseReflection({
+    initialDecision: state.initialChoice,
+    finalDecision: state.finalChoice,
+    selectedInfluentialClues: state.finalReasons,
+    viewedArchives: state.completedFiles,
+    turningPoint: state.turningPointFile,
+    turningPointReason: state.turningPointReason,
+    adoptedRule: state.adoptedRule,
+    practiceAction: state.practiceAction,
+    practiceSkipped: state.practiceSkipped,
+    transferAction: state.transferAction,
+    classificationPlacements: state.classificationPlacements,
+  });
+  const selectedRule = state.adoptedRule ?? reflection.recommendedRule;
+  const visibleRules = showAll
+    ? Object.entries(ruleOptions)
+    : [[reflection.recommendedRule, ruleOptions[reflection.recommendedRule]]];
+
+  return (
+    <motion.section
+      className="reflection-stage"
+      key="rule"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <span className="eyebrow">NEXT CASE RULE</span>
+      <h1>Choose One Rule for Your Next Case</h1>
+      <p>
+        The highlighted rule is a recommendation from this case record. You can
+        choose a different one.
+      </p>
+
+      <div className="rule-card-grid">
+        {visibleRules.map(([id, rule]) => (
+          <button
+            type="button"
+            key={id}
+            className={`rule-card ${selectedRule === id ? "selected" : ""}`}
+            onClick={() =>
+              patchState({ adoptedRule: id as InvestigationRuleId })
+            }
+          >
+            <span>
+              {id === reflection.recommendedRule ? "PRIMARY RULE" : "RULE"}
+            </span>
+            <b>{rule.title}</b>
+            <small>{rule.description}</small>
+          </button>
+        ))}
+      </div>
+
+      <div className="result-actions">
+        {!state.practiceAction && (
+          <small className="action-requirement">
+            Select one practice action, or skip practice.
+          </small>
+        )}
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => setShowAll((value) => !value)}
+        >
+          {showAll ? "Show Recommended Rule" : "Choose a Different Rule"}
+        </button>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() =>
+            patchState({
+              adoptedRule: selectedRule,
+              resultStage: "practice",
+              resultEvents: appendEvent(
+                state,
+                "investigation_rule_adopted",
+              ),
+            })
+          }
+        >
+          Adopt This Rule
+        </button>
+      </div>
+    </motion.section>
+  );
+}
+
+function PracticeCase({
+  state,
+  patchState,
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+}) {
+  const adoptedRule = state.adoptedRule;
+  const summary = generateCaseReflection({
+    initialDecision: state.initialChoice,
+    finalDecision: state.finalChoice,
+    selectedInfluentialClues: state.finalReasons,
+    viewedArchives: state.completedFiles,
+    turningPoint: state.turningPointFile,
+    turningPointReason: state.turningPointReason,
+    adoptedRule: state.adoptedRule,
+    practiceAction: state.practiceAction,
+    practiceSkipped: state.practiceSkipped,
+    transferAction: state.transferAction,
+    classificationPlacements: state.classificationPlacements,
+  }).practiceSummary;
+
+  return (
+    <motion.section
+      className="reflection-stage practice-case"
+      key="practice"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <span className="eyebrow">PRACTICE CASE</span>
+      <h1>Practice on a New Case</h1>
+      <p>{practiceScenario}</p>
+
+      <div className="comment-stack">
+        <p>The developers have officially abandoned the original fans.</p>
+        <p>
+          We have only seen one screenshot. The full update may explain it.
+        </p>
+        <p>Anyone defending this update is not a real fan.</p>
+      </div>
+
+      {adoptedRule && (
+        <aside className="rule-reminder">
+          <span>Your investigation rule is available here.</span>
+          <b>{ruleOptions[adoptedRule].title}</b>
+        </aside>
+      )}
+
+      <div className="action-grid" role="radiogroup">
+        {Object.entries(practiceActions).map(([id, label]) => (
+          <button
+            type="button"
+            role="radio"
+            key={id}
+            aria-checked={state.practiceAction === id}
+            className={state.practiceAction === id ? "selected" : ""}
+            onClick={() =>
+              patchState({
+                practiceAction: id as PracticeActionId,
+                practiceSkipped: false,
+                resultEvents: appendEvent(
+                  state,
+                  "practice_action_selected",
+                ),
+              })
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {(state.practiceAction || state.practiceSkipped) && (
+        <p className="reflection-note">{summary}</p>
+      )}
+
+      <div className="result-actions">
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() =>
+            patchState({
+              practiceSkipped: true,
+              practiceAction: null,
+              resultStage: "transfer",
+              resultEvents: appendEvent(state, "practice_skipped"),
+            })
+          }
+        >
+          Skip Practice
+        </button>
+        <button
+          type="button"
+          className="primary-button"
+          disabled={!state.practiceAction}
+          onClick={() =>
+            patchState({
+              resultStage: "transfer",
+              resultEvents: appendEvent(state, "practice_completed"),
+            })
+          }
+        >
+          Continue
+        </button>
+      </div>
+    </motion.section>
+  );
+}
+
+function TransferCheck({
+  state,
+  patchState,
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+}) {
+  return (
+    <motion.section
+      className="reflection-stage practice-case"
+      key="transfer"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <span className="eyebrow">FINAL INDEPENDENT CASE</span>
+      <h1>One Final Case</h1>
+      <p>{transferScenario}</p>
+
+      <div className="action-grid transfer-grid" role="radiogroup">
+        {Object.entries(transferActions).map(([id, label]) => (
+          <button
+            type="button"
+            role="radio"
+            key={id}
+            aria-checked={state.transferAction === id}
+            className={state.transferAction === id ? "selected" : ""}
+            onClick={() =>
+              patchState({
+                transferAction: id as TransferActionId,
+                resultEvents: appendEvent(
+                  state,
+                  "transfer_action_selected",
+                ),
+              })
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="result-actions">
+        {!state.transferAction && (
+          <small className="action-requirement">
+            Select one action to close the case.
+          </small>
+        )}
+        <button
+          type="button"
+          className="primary-button"
+          disabled={!state.transferAction}
+          onClick={() => patchState({ resultStage: "closed" })}
+        >
+          Close Case
+        </button>
+      </div>
+    </motion.section>
+  );
+}
+
+function CaseClosed({
+  state,
+  patchState,
+  onComplete,
+}: {
+  state: GameState;
+  patchState: Props["patchState"];
+  onComplete: () => void;
+}) {
+  const reflection = generateCaseReflection({
+    initialDecision: state.initialChoice,
+    finalDecision: state.finalChoice,
+    selectedInfluentialClues: state.finalReasons,
+    viewedArchives: state.completedFiles,
+    turningPoint: state.turningPointFile,
+    turningPointReason: state.turningPointReason,
+    adoptedRule: state.adoptedRule,
+    practiceAction: state.practiceAction,
+    practiceSkipped: state.practiceSkipped,
+    transferAction: state.transferAction,
+    classificationPlacements: state.classificationPlacements,
+  });
+  const rule = state.adoptedRule ?? reflection.recommendedRule;
+
+  return (
+    <motion.section
+      className="reflection-stage case-closed"
+      key="closed"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <span className="stamp reward-stamp">CASE CLOSED</span>
+      <h1>Case Closed</h1>
+      <p>How your investigation developed</p>
+
+      <div className="closing-timeline">
+        <article>
+          <span>01 / First Judgement</span>
+          <p>
+            In the first case, your first recorded judgement was{" "}
+            <b>
+              {state.initialChoice
+                ? decisionLabels[state.initialChoice]
+                : "not recorded"}
+            </b>
+            .
+          </p>
+        </article>
+        <article>
+          <span>02 / Guided Practice</span>
+          <p>{reflection.practiceSummary}</p>
+        </article>
+        <article>
+          <span>03 / Final Independent Case</span>
+          <p>{reflection.transferSummary}</p>
+        </article>
+      </div>
+
+      <section className="final-reflection-card">
+        <h2>{reflection.finalReflection}</h2>
+        <p>
+          My Rule for the Next Case: <b>{ruleOptions[rule].title}</b>
+        </p>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => patchState({ savedCaseCard: true })}
+        >
+          {state.savedCaseCard ? "Case Card Saved" : "Save Case Card"}
+        </button>
+      </section>
+
+      <p className="universal-disclaimer">{reflectionDisclaimer}</p>
+
+      <div className="result-actions">
+        <button
+          type="button"
+          className="primary-button"
+          onClick={onComplete}
+        >
+          Unlock Original Rewards
+        </button>
+      </div>
+    </motion.section>
+  );
+}
+
+export function ResultPage(props: Props) {
+  const stage = props.state.resultStage;
+
+  useEffect(() => {
+    if (!props.state.resultEvents.includes("result_reconstruction_viewed")) {
+      props.patchState({
+        resultEvents: appendEvent(
+          props.state,
+          "result_reconstruction_viewed",
+        ),
+      });
+    }
+  }, [props]);
+
+  return (
+    <ResultShell state={props.state}>
+      {stage === "reconstruction" && (
+        <CaseReconstruction
+          state={props.state}
+          patchState={props.patchState}
         />
       )}
-      <p className="universal-disclaimer">
-        {gameCopy.results.disclaimer}
-      </p>
-    </motion.main>
+      {stage === "evidence" && (
+        <EvidenceTrail state={props.state} patchState={props.patchState} />
+      )}
+      {stage === "turning-point" && (
+        <TurningPoint state={props.state} patchState={props.patchState} />
+      )}
+      {stage === "rule" && (
+        <RuleChoice state={props.state} patchState={props.patchState} />
+      )}
+      {stage === "practice" && (
+        <PracticeCase state={props.state} patchState={props.patchState} />
+      )}
+      {stage === "transfer" && (
+        <TransferCheck state={props.state} patchState={props.patchState} />
+      )}
+      {stage === "closed" && (
+        <CaseClosed
+          state={props.state}
+          patchState={props.patchState}
+          onComplete={props.onComplete}
+        />
+      )}
+    </ResultShell>
   );
 }

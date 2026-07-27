@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { DecisionPanel } from "@/src/components/DecisionPanel";
 import { FileInvestigation } from "@/src/components/FileInvestigations";
 import { PerspectivePuzzle } from "@/src/components/PerspectivePuzzle";
@@ -549,12 +549,6 @@ function RewardPage({ onRestart }: { onRestart: () => void }) {
 export function ArchiveGame() {
   const { state, patchState, updateState, reset, hydrated } = useGameState();
   const paramsApplied = useRef(false);
-  const [debugMode] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("debug") ===
-        "scoring",
-  );
 
   useEffect(() => {
     if (!hydrated || paramsApplied.current) return;
@@ -761,11 +755,9 @@ export function ArchiveGame() {
         )}
         {state.currentStep === "result" && state.patternLevel && (
           <ResultPage
-            key={`result-${state.patternLevel}`}
-            level={state.patternLevel}
-            dimensions={state.interactionDimensions}
-            scoringReasons={state.scoringReasons}
-            debug={debugMode}
+            key={`result-${state.patternLevel}-${state.resultStage}`}
+            state={state}
+            patchState={patchState}
             onComplete={unlockReward}
             onReview={() =>
               patchState({ currentStep: "final-decision" })
