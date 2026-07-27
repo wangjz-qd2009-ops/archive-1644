@@ -53,3 +53,12 @@ development to inspect them.
 ## Local progress
 
 Progress is saved in `localStorage` under `archive-1644-progress-v1`.
+
+## Research documentation
+
+- [Teen user persona](docs/teen-user-persona.md)
+- [Course methods and design changes](docs/course-methods-alignment.md)
+
+The persona is a research hypothesis for cognitive walkthroughs, not a claim
+about all teenagers. The design notes distinguish expert predictions from
+findings that still require contextual inquiry and usability testing.
